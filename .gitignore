@@ -2,6 +2,7 @@ HELP.md
 target/
 !.mvn/wrapper/maven-wrapper.jar
 !**/src/main/**
+tomcat/**
 !**/src/test/**
 
 ### STS ###
@@ -29,3 +30,4 @@ build/
 
 ### VS Code ###
 .vscode/
+/tomcat/
