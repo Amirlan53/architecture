@@ -212,7 +212,7 @@ function loadComments() {
 
     if (checkIfLoggedIn()) {
         console.log("here");
-        return getQuery("/comment?url=" + window.location.href);
+        return getQuery("/comment?url=" + encodeURI(window.location.href));
     } else {
         alert("Not logged in");
     }

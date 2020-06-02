@@ -27,6 +27,7 @@ public class CommentController {
     @ResponseBody
     public ResponseEntity<Map<String, Object>> get(@RequestParam("url") String url) {
 
+        System.out.println(url);
         Map<String, Object> response = new HashMap<>();
         response.put("response", commentRepository.getAllByUrl(url));
         return new ResponseEntity<>(response, HttpStatus.OK);
