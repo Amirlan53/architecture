@@ -2,6 +2,8 @@
 
     addNavigation();
     loadTopBuildings();
+    latestComments();
+    getMessages();
     
     function addNavigation() {
         var active = {
@@ -14,9 +16,12 @@
             active.gallery = true;
         }
         var html = "" +
+            "<div id='head-nav'>" +
+            "   <h1>АРХИТЕКТУРА Г. НУР-СУЛТАН</h1>" +
+            "</div>" +
             "<nav id=\"menu\" class=\"navbar navbar-expand-lg navbar-dark\">" +
             "    <a href=\"/pages/main.html\" class=\"navbar-brand\">" +
-            "        <img src=\"/img/lasto4kajpg.jpg\" width=\"40\" height=\"40\" alt=\"логотип\">" +
+            "        <img src=\"/img/flag.png\" height=\"40\" alt=\"логотип\">" +
             "    </a>" +
             "    <button class=\"navbar-toggler\" type=\"button\" data-toggle=\"collapse\" data-target=\"#navbarSupportedContent\"" +
             "            aria-controls=\"navbarSupportedContent\" aria-expanded=\"false\" aria-label=\"Toggle navigation\">" +
@@ -34,6 +39,7 @@
             (!checkIfLoggedIn() ?
                 "        <span class='auth' onclick='goToPage(\"/login\")'>Войти</span>" +
                 "       <span class='auth' onclick='goToPage(\"/registration\")'>Регистрация</span>" :
+                "       <span class='auth' onclick='goToPage(\"/pages/messages.html\")'>Поддержка</span>" +
                 "       <span class='auth' onclick='goToPage(\"/logout\")'>Выйти</span>") +
             "    </div>" +
             "</nav>";
@@ -45,9 +51,11 @@
 })();
 
 var record, user;
+var intervals = [];
+var checkingMessages = false;
 
 function like() {
-    if (record) {
+    if (checkIfLoggedIn() && record) {
         console.log(record);
         var obj;
         if (record.length) {
@@ -60,7 +68,7 @@ function like() {
             }
         } else {
             obj = {
-                url: window.location.href,
+                url: window.location.pathname+window.location.search,
                 likes: 1
             };
         }
@@ -85,58 +93,106 @@ function doesCurrLiked() {
 function canComment() {
 
     var commentContainer = document.getElementById("comment-container");
+    record = loadRecords();
+    if (record && record.length) {
+        var likeNum = record[0].likes;
+        if (document.getElementById("likeNum")) {
+            document.getElementById("likeNum").innerText = likeNum;
+            if (checkIfLoggedIn() && doesCurrLiked()) {
+                document.getElementById("likeNum").parentElement.style.color = "red";
+            } else {
+                document.getElementById("likeNum").parentElement.style.color = "black";
+            }
+        }
+    }
     if (!checkIfLoggedIn()) {
         if (commentContainer != null) {
-            commentContainer.innerHTML = "" +
-                "<a href='/login'>" +
+            addCommentsHtmlToPage(commentContainer, false);
+        }
+    } else {
+        addCommentsHtmlToPage(commentContainer, true);
+    }
+
+}
+
+function addCommentsHtmlToPage(commentContainer, logged) {
+    if (commentContainer != null) {
+        var html = "" +
+            "<h4>Комментарии</h4>" +
+            "   <div style=\"padding: 5px;\">";
+        var comments = loadComments();
+        for (var i = 0; i < comments.length; i++) {
+            var dt = new Date(comments[i]["date"]);
+            html += "" +
+                "<div style=\"font-weight: bold;\">" +
+                comments[i]["author"] +
+                "   <span style=\"font-weight: normal;font-size: smaller;color: grey;\">" +
+                dt.toLocaleDateString() + " " + dt.toLocaleTimeString() +
+                "   </span>" +
+                "</div>" +
+                "<div>" +
+                comments[i]["text"] +
+                "</div>";
+        }
+        if (logged) {
+            html += "</div>" +
+                "<div class='form-group'>" +
+                "<textarea class='form-control' name=\"text\" id='comment'></textarea>" +
+                "<button onclick='addComment()' class='btn btn-light float-right t-25'>Добавить</button>" +
+                "</div>";
+        } else {
+            html+= "<a href='/login'>" +
                 "Авторизуйтесь " +
                 "</a>" +
                 "или " +
                 "<a href='/registration'>" +
                 "зарегистрируйтесь " +
                 "</a>" +
-                "для оставления комментариев."
+                "для оставления комментариев.";
         }
-    } else {
-        record = loadRecords();
-        if (record && record.length) {
-            var likeNum = record[0].likes;
-            if (document.getElementById("likeNum")) {
-                document.getElementById("likeNum").innerText = likeNum;
-                if (doesCurrLiked()) {
-                    document.getElementById("likeNum").parentElement.style.color = "red";
-                } else {
-                    document.getElementById("likeNum").parentElement.style.color = "black";
-                }
-            }
-        }
-        if (commentContainer != null) {
-            var html = "" +
-                "<h4>Комментарии</h4>" +
-                "   <div style=\"padding: 5px;\">";
-            var comments = loadComments();
-            for (var i = 0; i < comments.length; i++) {
-                var dt = new Date(comments[i]["date"]);
-                html += "" +
-                    "<div style=\"font-weight: bold;\">" +
-                    comments[i]["author"] +
-                    "   <span style=\"font-weight: normal;font-size: smaller;color: grey;\">" +
-                    dt.toLocaleDateString() + " " + dt.toLocaleTimeString() +
-                    "   </span>" +
-                    "</div>" +
-                    "<div>" +
-                    comments[i]["text"] +
-                    "</div>";
-            }
-            html += "</div>" +
-                "<div class='form-group'>" +
-                "<textarea class='form-control' name=\"text\" id='comment'></textarea>" +
-                "<button onclick='addComment()' class='btn btn-light float-right t-25'>Добавить</button>" +
-                "</div>";
-            commentContainer.innerHTML = html;
-        }
+        commentContainer.innerHTML = html;
     }
+}
 
+function latestComments() {
+    var commentContainer = document.getElementById("comment-latest");
+    if (commentContainer != null) {
+        var latest = getLatestComments();
+        var xhr= new XMLHttpRequest();
+        xhr.open('GET', '/pages/latest-comments.html', true);
+        xhr.onreadystatechange= function() {
+            if (this.readyState!==4) return;
+            if (this.status!==200) return; // or whatever error handling you want
+            document.getElementById('comment-latest').innerHTML= this.responseText;
+        };
+        xhr.send();
+        setTimeout(function() {
+            if (document.getElementById("latest-comments")) {
+                var items = latest;
+                var html = "<div><h4>Последние комментарии</h4>";
+                for (var i = 0; i < items.length; i++) {
+                    var dt = new Date(items[i]["date"]);
+                    html += "<hr style='margin-bottom: 2px;' />" +
+                        "<div>" +
+                        "<div style=\"font-weight: bold;\">" +
+                        items[i]["author"] +
+                        "   <span style=\"font-weight: normal;font-size: smaller;color: grey;\">" +
+                        dt.toLocaleDateString() + " " + dt.toLocaleTimeString() +
+                        "   </span>" +
+                        "</div>" +
+                        "<div>" +
+                        items[i]["text"] +
+                        "</div>" +
+                        "<div>" +
+                        "<a href='" + items[i]["url"] + "' style='font-size: 12px;color: #73b1f3'>Посмотреть</a>" +
+                        "</div>" +
+                        "</div>";
+                }
+                html += "</div>"
+                document.getElementById("latest-comments").innerHTML = html;
+            }
+        }, 1000);
+    }
 }
 
 function addComment() {
@@ -147,7 +203,7 @@ function addComment() {
         var obj = {
             author: usernameResponse["username"],
             text: comment.value,
-            url: window.location.href
+            url: window.location.pathname+window.location.search
         };
         postQuery("/comment", obj);
         canComment();
@@ -210,22 +266,19 @@ function checkIfLoggedIn() {
 
 function loadComments() {
 
-    if (checkIfLoggedIn()) {
-        console.log("here");
-        return getQuery("/comment?url=" + encodeURI(window.location.href));
-    } else {
-        alert("Not logged in");
-    }
+    return getQuery("/comment?url=" + encodeURI(window.location.pathname+window.location.search));
+
+}
+
+function getLatestComments() {
+
+    return getQuery("/comment/latest");
 
 }
 
 function loadRecords() {
 
-    if (checkIfLoggedIn()) {
-        return getQuery("/record?url=" + window.location.href);
-    } else {
-        alert("Not logged in");
-    }
+    return getQuery("/record?url=" + window.location.pathname+window.location.search);
 
 }
 
@@ -250,7 +303,9 @@ function loadTopBuildings() {
                 html += "<hr style='margin-bottom: 2px;' /><div>" +
                     "<span style='font-size: 26px;color: grey;display: table-cell;vertical-align: top;line-height: 1'>" + (i+1) +
                     "</span>" +
-                    "<span style='display: table-cell;vertical-align: top;padding-left: 5px;'>" + getNameFromUrl(items[i].url) + "</span>" +
+                    "<span style='display: table-cell;vertical-align: top;padding-left: 5px;'>" +
+                    "   <a href='" +
+                    items[i].url +"' >" + getNameFromUrl(items[i].url) + "</a></span>" +
                     "</div>";
             }
             html += "</div>"
@@ -297,4 +352,121 @@ function getNameFromUrl(url) {
     } else if (url.indexOf("shabyt") !== -1) {
         return "Дворец творчества Шабыт";
     }
+}
+
+function getMessages(name) {
+    setTimeout(function() {
+        var messagesContainer = document.getElementById("messages-container");
+        if (messagesContainer != null) {
+            var author = name;
+            var commentArea = document.getElementById("commentArea");
+            if (!name) {
+                author = user;
+            }
+            var messagesResponse = getQuery("/message/user?name=" + (name ? name : user));
+            var html = "<div class='card-header'><h4>Диалог</h4></div><div class='card-body' id='bodyOfDialog' style='max-height: 800px;overflow-y: auto'>";
+            for (var i = 0; i < messagesResponse.length; i++) {
+                html+= "<div style='clear: both'><span class='mes' " + (messagesResponse[i]["admin"] ? "style='float:right;clear:both;'" : "") + ">" +
+                    "   <div class='mesAuthor'>" + (messagesResponse[i]["admin"] || messagesResponse[i]["author"]) + "</div>" +
+                    "   <div class='mesText'>" + messagesResponse[i]["text"] + "</div>" +
+                    "   <div class='mesDate'>" + new Date(messagesResponse[i]["date"]).toLocaleString() + "</div>" +
+                    "</span></div>";
+            }
+            html+="</div>";
+            messagesContainer.innerHTML = html;
+            var exampleModal = document.getElementById("exampleModal");
+            if (exampleModal && !exampleModal.getAttribute("aria-hidden") && !document.added) {
+                if (commentArea.parentElement.innerHTML.indexOf("button") === -1) {
+                    commentArea.parentElement.innerHTML = commentArea.parentElement.innerHTML +
+                        "<button onclick='sendMessage(" + "\"" + author + "\"" + ")'>Отправить</button>";
+                } else {
+                    commentArea.parentElement.innerHTML = commentArea.parentElement.innerHTML
+                            .substring(0, commentArea.parentElement.innerHTML.indexOf("button") - 1) +
+                        "<button onclick='sendMessage(" + "\"" + author + "\"" + ")'>Отправить</button>";
+                }
+                document.added = true;
+            }
+            if (name) {
+                checkMessages(name);
+            }
+            gotoBottom("bodyOfDialog");
+
+        }
+    }, 1000);
+}
+
+function checkMessages(name) {
+    if (!checkingMessages) {
+        checkingMessages = true;
+        if (!intervals) {
+            intervals = [];
+        }
+        var interval = setInterval(function () {
+            getMessages(name);
+        }, 3000);
+        intervals.push(interval);
+    }
+    checkingMessages = true;
+}
+
+window.onbeforeunload = function(){
+    for (var i = 0; i < intervals.length; i++) {
+        clearInterval(intervals[i]);
+    }
+};
+
+function sendMessage(to) {
+    var textareaContainer = document.getElementById("commentArea");
+    if (textareaContainer != null) {
+        var value = textareaContainer.value;
+        if (value && value != "") {
+            var obj = {
+                author: to ? to : user,
+                text: value
+            };
+            postQuery("/message", obj);
+            getMessages(to);
+        }
+        textareaContainer.value = "";
+    }
+}
+
+var allUsers = [];
+function isAdminRead(name, id) {
+    var response = getQuery("/message/isAdminRead?name=" + name);
+    var element = document.getElementById(id);
+    if (element) {
+        element.innerHTML = "<button type=\"button\" class=\"btn btn-primary\"\n" + (response===false ? " style='background:orange' title='Есть непрочитанные сообщения'" : "") +
+            "                              onclick=\"getMessages('" + name + "')\"\n" +
+            "                              data-toggle=\"modal\" data-target=\"#exampleModal\">\n" +
+            "                        Диалог\n" +
+            "                      </button>";
+        var exist = false;
+        for (var i = 0; i < allUsers.length; i++) {
+            if (allUsers[i].author == name) {
+                exist = true;
+            }
+        }
+        if (!exist) {
+            allUsers.push({author: name, id: id});
+        }
+    }
+
+}
+
+function updateUsersNotify() {
+    for (var i = 0; i < allUsers.length; i++) {
+        isAdminRead(allUsers[i].author, allUsers[i].id);
+    }
+    for (var i = 0; i < intervals.length; i++) {
+        clearInterval(intervals[i]);
+    }
+    checkingMessages = false;
+    document.added = false;
+
+}
+
+function gotoBottom(id){
+    var element = document.getElementById(id);
+    element.scrollTop = element.scrollHeight - element.clientHeight;
 }

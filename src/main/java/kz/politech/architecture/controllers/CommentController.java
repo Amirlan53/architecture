@@ -11,6 +11,7 @@ import org.springframework.web.bind.annotation.*;
 
 import java.util.Date;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 /**
@@ -30,6 +31,17 @@ public class CommentController {
         System.out.println(url);
         Map<String, Object> response = new HashMap<>();
         response.put("response", commentRepository.getAllByUrl(url));
+        return new ResponseEntity<>(response, HttpStatus.OK);
+
+    }
+
+    @RequestMapping(value = "/latest", method = RequestMethod.GET)
+    @ResponseBody
+    public ResponseEntity<Map<String, Object>> latest() {
+
+        Map<String, Object> response = new HashMap<>();
+        List<Comment> list = commentRepository.findAll();
+        response.put("response", list.size() > 5 ? list.subList(list.size() - 5, list.size()) : list);
         return new ResponseEntity<>(response, HttpStatus.OK);
 
     }

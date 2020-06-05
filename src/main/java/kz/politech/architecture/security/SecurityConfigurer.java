@@ -3,6 +3,7 @@ package kz.politech.architecture.security;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.http.HttpMethod;
 import org.springframework.security.config.annotation.authentication.builders.AuthenticationManagerBuilder;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
@@ -41,7 +42,8 @@ public class SecurityConfigurer extends WebSecurityConfigurerAdapter {
                 //Доступ только для пользователей с ролью Администратор
                 .antMatchers("/admin/**").hasRole("ADMIN")
                 //Доступ разрешен всем пользователей
-                .antMatchers("/", "/css/**", "/js/**", "/img/**", "/pages/**", "/security/**").permitAll()
+                .antMatchers("/", "/css/**", "/js/**", "/img/**", "/pages/**", "/security/**", "/record/**").permitAll()
+                .antMatchers(HttpMethod.GET, "/comment/**").permitAll()
                 //Все остальные страницы требуют аутентификации
                 .anyRequest().authenticated()
                 .and()
@@ -72,9 +74,13 @@ public class SecurityConfigurer extends WebSecurityConfigurerAdapter {
         @Override
         public void onAuthenticationSuccess(HttpServletRequest httpServletRequest, HttpServletResponse httpServletResponse, Authentication authentication) throws IOException, ServletException {
             HttpSession session = httpServletRequest.getSession(false);
+            String currentUrl = httpServletRequest.getRequestURL().toString();
             String url = "";
             if (session != null) {
                 url = (String) httpServletRequest.getSession().getAttribute("url_prior_login");
+                if (url != null && currentUrl.contains("login") && url.contains("registration")) {
+                    url = "";
+                }
             }
             httpServletResponse.sendRedirect(url);
         }
