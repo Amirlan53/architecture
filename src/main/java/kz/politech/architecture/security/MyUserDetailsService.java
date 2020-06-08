@@ -62,6 +62,12 @@ public class MyUserDetailsService implements UserDetailsService {
         return true;
     }
 
+    public boolean updateUser(User user) {
+        user.setPassword(bCryptPasswordEncoder.encode(user.getPassword()));
+        userRepository.save(user);
+        return true;
+    }
+
     public boolean deleteUser(Long userId) {
         if (userRepository.findById(userId).isPresent()) {
             userRepository.deleteById(userId);

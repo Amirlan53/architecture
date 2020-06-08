@@ -4,7 +4,15 @@
     loadTopBuildings();
     latestComments();
     getMessages();
-    
+    setMapProps();
+
+    function setMapProps() {
+        if (document.getElementById("map") != null) {
+            document.getElementById("map").style.width=document.getElementById("map").clientWidth;
+            document.getElementById("map").style.minHeight="500px";
+        }
+    }
+
     function addNavigation() {
         var active = {
             main: false,
@@ -14,6 +22,8 @@
             active.main = true;
         } else if (window.location.href.indexOf("gallery.html") !== -1) {
             active.gallery = true;
+        } else if (window.location.href.indexOf("map.html") !== -1) {
+            active.map = true;
         }
         var html = "" +
             "<div id='head-nav'>" +
@@ -34,6 +44,9 @@
             "            </li>" +
             "            <li class=\"nav-item " + (active.gallery === true ? "active" : "") + "\">" +
             "                <a href=\"/pages/gallery.html\" class=\"nav-link\">Изображения</a>" +
+            "            </li>" +
+            "            <li class=\"nav-item " + (active.map === true ? "active" : "") + "\">" +
+            "                <a href=\"/pages/map.html\" class=\"nav-link\">Карта</a>" +
             "            </li>" +
             "        </ul>" +
             (!checkIfLoggedIn() ?

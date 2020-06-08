@@ -34,13 +34,19 @@
           <form method="POST" action="${pageContext.request.contextPath}/login">
             <div class="form-group">
               <label for="username">Имя пользователя:</label>
-              <input name="username" type="text" placeholder="Имя пользователя"
+              <input name="username" type="email" placeholder="Имя пользователя"
                      autofocus="true" class="form-control" id="username">
             </div>
             <div class="form-group">
               <label for="pwd">Пароль:</label>
               <input type="password" class="form-control" placeholder="Пароль" name="password" id="pwd">
             </div>
+            <div style="text-align: right">
+              <span onclick="goToPage('${pageContext.request.contextPath}/reset-password')"
+                    style="cursor: pointer"
+                    class="btn btn-secondary">Забыли пароль?</span>
+            </div>
+            <br>
             <button type="submit" class="btn btn-primary">Войти</button>
             <span onclick="goToPage('${pageContext.request.contextPath}/registration')" class="btn btn-primary float-right">Зарегистрироваться</span>
           </form>

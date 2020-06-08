@@ -25,11 +25,21 @@
           <div class="card-body">
             <form:form method="POST" modelAttribute="userForm">
               <div class="form-group">
-                <label for="username">Имя пользователя:</label>
-                <form:input type="text" path="username" placeholder="Имя пользователя"
+                <label for="username">Email пользователя:</label>
+                <form:input type="email" path="username" placeholder="Email пользователя"
                             autofocus="true" class="form-control" id="username"></form:input>
                 <form:errors path="username"></form:errors>
                   ${usernameError}
+              </div>
+              <div class="form-group">
+                <label for="firstName">Имя:</label>
+                <form:input type="text" path="firstName" placeholder="Имя пользователя"
+                            autofocus="true" class="form-control" id="firstName"></form:input>
+              </div>
+              <div class="form-group">
+                <label for="lastName">Фамилия:</label>
+                <form:input type="text" path="lastName" placeholder="Фамилия пользователя"
+                            autofocus="true" class="form-control" id="lastName"></form:input>
               </div>
               <div class="form-group">
                 <label for="password">Пароль:</label>
