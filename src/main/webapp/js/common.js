@@ -27,7 +27,7 @@
         }
         var html = "" +
             "<div id='head-nav'>" +
-            "   <h1>АРХИТЕКТУРА Г. НУР-СУЛТАН</h1>" +
+            "   <h1>АРХИТЕКТУРНЫЙ ПОРТАЛ Г. НУР-СУЛТАН</h1>" +
             "</div>" +
             "<nav id=\"menu\" class=\"navbar navbar-expand-lg navbar-dark\">" +
             "    <a href=\"/pages/main.html\" class=\"navbar-brand\">" +
@@ -188,7 +188,7 @@ function latestComments() {
                     html += "<hr style='margin-bottom: 2px;' />" +
                         "<div>" +
                         "<div style=\"font-weight: bold;\">" +
-                        items[i]["author"] +
+                        items[i]["firstName"] + " " + items[i]["lastName"] +
                         "   <span style=\"font-weight: normal;font-size: smaller;color: grey;\">" +
                         dt.toLocaleDateString() + " " + dt.toLocaleTimeString() +
                         "   </span>" +

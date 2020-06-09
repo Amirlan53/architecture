@@ -2,19 +2,19 @@ package kz.politech.architecture.controllers;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import kz.politech.architecture.dao.CommentRepository;
-import kz.politech.architecture.dao.RecordRepository;
+import kz.politech.architecture.dao.UserRepository;
 import kz.politech.architecture.model.Comment;
+import kz.politech.architecture.model.User;
+import kz.politech.architecture.security.MyUserDetailsService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.mail.SimpleMailMessage;
 import org.springframework.mail.javamail.JavaMailSender;
+import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.web.bind.annotation.*;
 
-import java.util.Date;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 /**
  * Created by Marcus on 05.05.2020.
@@ -26,6 +26,8 @@ public class CommentController {
     @Autowired
     private CommentRepository commentRepository;
     @Autowired
+    private UserRepository userRepository;
+    @Autowired
     public JavaMailSender emailSender;
 
     @RequestMapping(method = RequestMethod.GET)
@@ -34,6 +36,19 @@ public class CommentController {
 
         System.out.println(url);
         Map<String, Object> response = new HashMap<>();
+        List<Comment> comments = commentRepository.getAllByUrl(url);
+        List<Map<String, Object>> res = new LinkedList<>();
+        for (Comment comment : comments) {
+            Map<String, Object> result = new HashMap<>();
+            String author = comment.getAuthor();
+            User user = userRepository.findByUsername(author);
+            result.put("firstName", user.getFirstName());
+            result.put("lastName", user.getLastName());
+            result.put("text", comment.getText());
+            result.put("url", comment.getUrl());
+            result.put("date", comment.getDate());
+            res.add(result);
+        }
         response.put("response", commentRepository.getAllByUrl(url));
         return new ResponseEntity<>(response, HttpStatus.OK);
 
@@ -45,7 +60,20 @@ public class CommentController {
 
         Map<String, Object> response = new HashMap<>();
         List<Comment> list = commentRepository.findAll();
-        response.put("response", list.size() > 5 ? list.subList(list.size() - 5, list.size()) : list);
+        List<Comment> comments = list.size() > 5 ? list.subList(list.size() - 5, list.size()) : list;
+        List<Map<String, Object>> res = new LinkedList<>();
+        for (Comment comment : comments) {
+            Map<String, Object> result = new HashMap<>();
+            String author = comment.getAuthor();
+            User user = userRepository.findByUsername(author);
+            result.put("firstName", user.getFirstName());
+            result.put("lastName", user.getLastName());
+            result.put("text", comment.getText());
+            result.put("url", comment.getUrl());
+            result.put("date", comment.getDate());
+            res.add(result);
+        }
+        response.put("response", res);
         return new ResponseEntity<>(response, HttpStatus.OK);
 
     }
