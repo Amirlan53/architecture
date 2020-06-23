@@ -5,6 +5,7 @@
     latestComments();
     getMessages();
     setMapProps();
+    addPersonal();
 
     function setMapProps() {
         if (document.getElementById("map") != null) {
@@ -27,7 +28,7 @@
         }
         var html = "" +
             "<div id='head-nav'>" +
-            "   <h1>АРХИТЕКТУРНЫЙ ПОРТАЛ Г. НУР-СУЛТАН</h1>" +
+            "   <h1>" + (localStorage.getItem('lg')==="ru" ? "АРХИТЕКТУРНЫЙ ПОРТАЛ Г. НУР-СУЛТАН" : (localStorage.getItem('lg')==="kz" ? "Нұр-сұлтан қаласының сәулет порталы".toUpperCase() : "ARCHITECTURAL PORTAL OF NUR-SULTAN")) + "</h1>" +
             "</div>" +
             "<nav id=\"menu\" class=\"navbar navbar-expand-lg navbar-dark\">" +
             "    <a href=\"/pages/main.html\" class=\"navbar-brand\">" +
@@ -40,20 +41,32 @@
             "    <div class=\"collapse navbar-collapse\" id=\"navbarSupportedContent\">" +
             "        <ul class=\"navbar-nav mr-auto\">" +
             "            <li class=\"nav-item " + (active.main === true ? "active" : "") + "\">" +
-            "                <a href=\"/pages/main.html\" class=\"nav-link\">Главная</a>" +
+            "                <a href=\"/pages/main.html\" class=\"nav-link\">" + (localStorage.getItem('lg')==="ru" ? "Главная" : (localStorage.getItem('lg')==="kz" ? "Басты бет" : "Main")) + "</a>" +
             "            </li>" +
             "            <li class=\"nav-item " + (active.gallery === true ? "active" : "") + "\">" +
-            "                <a href=\"/pages/gallery.html\" class=\"nav-link\">Изображения</a>" +
+            "                <a href=\"/pages/gallery.html\" class=\"nav-link\">" + (localStorage.getItem('lg')==="ru" ? "Изображения" : (localStorage.getItem('lg')==="kz" ? "Суреттер" : "Images")) + "</a>" +
             "            </li>" +
             "            <li class=\"nav-item " + (active.map === true ? "active" : "") + "\">" +
-            "                <a href=\"/pages/map.html\" class=\"nav-link\">Карта</a>" +
+            "                <a href=\"/pages/map.html\" class=\"nav-link\">" + (localStorage.getItem('lg')==="ru" ? "Карта" : (localStorage.getItem('lg')==="kz" ? "Карта" : "Map")) + "</a>" +
             "            </li>" +
             "        </ul>" +
+            "<div class=\"dropdown\">\n" +
+            "  <button style='    background: #79baff;\n" +
+            "    color: white;' class=\"btn btn-light dropdown-toggle\" type=\"button\" id=\"dropdownMenuButton\" data-toggle=\"dropdown\" aria-haspopup=\"true\" aria-expanded=\"false\">\n" +
+            "    " + (localStorage.getItem('lg')==="ru" ? "Язык" : (localStorage.getItem('lg')==="kz" ? "Тіл" : "Language")) + "\n" +
+            "  </button>\n" +
+            "  <div class=\"dropdown-menu\" aria-labelledby=\"dropdownMenuButton\">\n" +
+            "    <a class=\"dropdown-item\" onclick='selectLang(\"ru\")'>Русский</a>\n" +
+            "    <a class=\"dropdown-item\" onclick='selectLang(\"kz\")'>Қазақша</a>\n" +
+            "    <a class=\"dropdown-item\" onclick='selectLang(\"en\")'>English</a>\n" +
+            "  </div>\n" +
+            "</div>" +
             (!checkIfLoggedIn() ?
-                "        <span class='auth' onclick='goToPage(\"/login\")'>Войти</span>" +
-                "       <span class='auth' onclick='goToPage(\"/registration\")'>Регистрация</span>" :
-                "       <span class='auth' onclick='goToPage(\"/pages/messages.html\")'>Поддержка</span>" +
-                "       <span class='auth' onclick='goToPage(\"/logout\")'>Выйти</span>") +
+                "        <span class='auth' onclick='goToPage(\"/login\")'>" + (localStorage.getItem('lg')==="ru" ? "Войти" : (localStorage.getItem('lg')==="kz" ? "Кіру" : "Enter")) + "</span>" +
+                "       <span class='auth' onclick='goToPage(\"/registration\")'>" + (localStorage.getItem('lg')==="ru" ? "Регистрация" : (localStorage.getItem('lg')==="kz" ? "Тіркеу" : "Registration")) + "</span>" :
+                "       <span class='auth' onclick='goToPage(\"/pages/messages.html\")'>" + (localStorage.getItem('lg')==="ru" ? "Поддержка" : (localStorage.getItem('lg')==="kz" ? "Қолдау" : "Support")) + "</span>" +
+                "       <span class='auth' onclick='goToPage(\"/pages/personal.html\")'>" + (localStorage.getItem('lg')==="ru" ? "Личный кабинет" : (localStorage.getItem('lg')==="kz" ? "Жеке кабинет" : "Private")) + "</span>" +
+                "       <span class='auth' onclick='goToPage(\"/logout\")'>" + (localStorage.getItem('lg')==="ru" ? "Выйти" : (localStorage.getItem('lg')==="kz" ? "Шығу" : "Log off")) + "</span>") +
             "    </div>" +
             "</nav>";
         var body = document.getElementsByTagName("body")[0];
@@ -64,8 +77,17 @@
 })();
 
 var record, user;
+var isAdmin = false;
 var intervals = [];
 var checkingMessages = false;
+var lang = "ru";
+
+function selectLang(lg) {
+    lang = lg;
+    localStorage.setItem('lg', lang);
+    getQuery("/security/setLang?lang=" + lg);
+    goToPage(window.location.href);
+}
 
 function like() {
     if (checkIfLoggedIn() && record) {
@@ -131,18 +153,24 @@ function canComment() {
 function addCommentsHtmlToPage(commentContainer, logged) {
     if (commentContainer != null) {
         var html = "" +
-            "<h4>Комментарии</h4>" +
+            "<h4>" + (localStorage.getItem('lg')==="ru" ? "Комментарии" : (localStorage.getItem('lg')==="kz" ? "Түсініктемелер" : "Comments")) + "</h4>" +
             "   <div style=\"padding: 5px;\">";
         var comments = loadComments();
         for (var i = 0; i < comments.length; i++) {
             var dt = new Date(comments[i]["date"]);
             html += "" +
                 "<div style=\"font-weight: bold;\">" +
-                comments[i]["author"] +
+                ((comments[i]["firstName"] && comments[i]["lastName"]) ? (comments[i]["firstName"] + ' ' + comments[i]["lastName"]) : comments[i]["author"]) +
                 "   <span style=\"font-weight: normal;font-size: smaller;color: grey;\">" +
                 dt.toLocaleDateString() + " " + dt.toLocaleTimeString() +
-                "   </span>" +
-                "</div>" +
+                "   </span>";
+            if (isAdmin || user === comments[i]["author"]) {
+                html += "<span onclick='deleteComment(" + comments[i]["id"] + ")'>" +
+                    "<svg class=\"bi bi-trash-fill\" width=\"1em\" height=\"1em\" viewBox=\"0 0 16 16\" fill=\"currentColor\" xmlns=\"http://www.w3.org/2000/svg\">\n" +
+                    "  <path fill-rule=\"evenodd\" d=\"M2.5 1a1 1 0 0 0-1 1v1a1 1 0 0 0 1 1H3v9a2 2 0 0 0 2 2h6a2 2 0 0 0 2-2V4h.5a1 1 0 0 0 1-1V2a1 1 0 0 0-1-1H10a1 1 0 0 0-1-1H7a1 1 0 0 0-1 1H2.5zm3 4a.5.5 0 0 1 .5.5v7a.5.5 0 0 1-1 0v-7a.5.5 0 0 1 .5-.5zM8 5a.5.5 0 0 1 .5.5v7a.5.5 0 0 1-1 0v-7A.5.5 0 0 1 8 5zm3 .5a.5.5 0 0 0-1 0v7a.5.5 0 0 0 1 0v-7z\"/>\n" +
+                    "</svg></span>";
+            }
+            html += "</div>" +
                 "<div>" +
                 comments[i]["text"] +
                 "</div>";
@@ -151,17 +179,17 @@ function addCommentsHtmlToPage(commentContainer, logged) {
             html += "</div>" +
                 "<div class='form-group'>" +
                 "<textarea class='form-control' name=\"text\" id='comment'></textarea>" +
-                "<button onclick='addComment()' class='btn btn-light float-right t-25'>Добавить</button>" +
+                "<button onclick='addComment()' class='btn btn-light float-right t-25'>" + (localStorage.getItem('lg')==="ru" ? "Добавить" : (localStorage.getItem('lg')==="kz" ? "Қосу" : "Add")) + "</button>" +
                 "</div>";
         } else {
             html+= "<a href='/login'>" +
-                "Авторизуйтесь " +
+                "" + (localStorage.getItem('lg')==="ru" ? "Авторизуйтесь" : (localStorage.getItem('lg')==="kz" ? "Авторизацияланыңыз" : "Log in")) + " " +
                 "</a>" +
-                "или " +
+                "" + (localStorage.getItem('lg')==="ru" ? "или" : (localStorage.getItem('lg')==="kz" ? "немесе" : "or")) + " " +
                 "<a href='/registration'>" +
-                "зарегистрируйтесь " +
+                "" + (localStorage.getItem('lg')==="ru" ? "зарегистрируйтесь" : (localStorage.getItem('lg')==="kz" ? "тіркеліңіз" : "register")) + " " +
                 "</a>" +
-                "для оставления комментариев.";
+                "" + (localStorage.getItem('lg')==="ru" ? "для оставления комментариев." : (localStorage.getItem('lg')==="kz" ? "пікір қалдыру үшін." : "to add comments.")) + "";
         }
         commentContainer.innerHTML = html;
     }
@@ -182,13 +210,13 @@ function latestComments() {
         setTimeout(function() {
             if (document.getElementById("latest-comments")) {
                 var items = latest;
-                var html = "<div><h4>Последние комментарии</h4>";
+                var html = "<div><h4>" + (localStorage.getItem('lg')==="ru" ? "Последние комментарии" : (localStorage.getItem('lg')==="kz" ? "Соңғы пікірлер" : "Last comments")) + "</h4>";
                 for (var i = 0; i < items.length; i++) {
                     var dt = new Date(items[i]["date"]);
                     html += "<hr style='margin-bottom: 2px;' />" +
                         "<div>" +
                         "<div style=\"font-weight: bold;\">" +
-                        items[i]["firstName"] + " " + items[i]["lastName"] +
+                        (items[i]["firstName"] && items[i]["lastName"] ? (items[i]["firstName"] + " " + items[i]["lastName"]) : (items[i]["name"])) +
                         "   <span style=\"font-weight: normal;font-size: smaller;color: grey;\">" +
                         dt.toLocaleDateString() + " " + dt.toLocaleTimeString() +
                         "   </span>" +
@@ -197,7 +225,7 @@ function latestComments() {
                         items[i]["text"] +
                         "</div>" +
                         "<div>" +
-                        "<a href='" + items[i]["url"] + "' style='font-size: 12px;color: #73b1f3'>Посмотреть</a>" +
+                        "<a href='" + items[i]["url"] + "' style='font-size: 12px;color: #73b1f3'>" + (localStorage.getItem('lg')==="ru" ? "Посмотреть" : (localStorage.getItem('lg')==="kz" ? "Көру" : "See")) + "</a>" +
                         "</div>" +
                         "</div>";
                 }
@@ -273,8 +301,17 @@ function checkIfLoggedIn() {
 
     var response = getQuery("/security/isLogged");
     user = response["username"];
+    if (response["roles"] && response["roles"].length) {
+        if (response["roles"][0].authority === "ROLE_ADMIN") {
+            isAdmin = true;
+        }
+    }
     return  response["val"] === true;
 
+}
+
+function isAdminUser() {
+    return isAdmin;
 }
 
 function loadComments() {
@@ -299,6 +336,22 @@ function loadTopBuildings() {
     if (!document.getElementById("topBuildings")) {
         return;
     }
+    var mainBuildingsRow = document.getElementById("mainBuildings");
+    var buils = getQuery("/building/all");
+    var html = "";
+    if (buils) {
+        var arr = buils;
+        for (var i = 0; i < arr.length; i++) {
+            html += "<div class=\"col-12 col-md-6 col-lg-4\" onclick=\"goToPage('/building/" + arr[i].id + "')\">\n" +
+                "                            <figure>\n" +
+                "                                <p><img src=\"/building/" + arr[i].id + "/img\" alt=\"" + arr[i].name + "\" /></p>\n" +
+                "                                <figcaption>" + arr[i].name + "</figcaption>\n" +
+                "                            </figure>\n" +
+                "                        </div>";
+        }
+        mainBuildingsRow.innerHTML = html;
+    }
+
     var xhr= new XMLHttpRequest();
     xhr.open('GET', '/pages/top-buildings.html', true);
     xhr.onreadystatechange= function() {
@@ -310,15 +363,15 @@ function loadTopBuildings() {
     var topRecords = getQuery("/record/all");
     setTimeout(function() {
         if (document.getElementById("records")) {
-            var items = topRecords["content"];
-            var html = "<div><h4>Самые рейтинговые места</h4>";
+            var items = topRecords;
+            var html = "<div><h4>" + (localStorage.getItem('lg')==="ru" ? "Самые рейтинговые места" : (localStorage.getItem('lg')==="kz" ? "Ең рейтингтік құрылыстар" : "Top rated places")) + "</h4>";
             for (var i = 0; i < items.length; i++) {
                 html += "<hr style='margin-bottom: 2px;' /><div>" +
                     "<span style='font-size: 26px;color: grey;display: table-cell;vertical-align: top;line-height: 1'>" + (i+1) +
                     "</span>" +
                     "<span style='display: table-cell;vertical-align: top;padding-left: 5px;'>" +
                     "   <a href='" +
-                    items[i].url +"' >" + getNameFromUrl(items[i].url) + "</a></span>" +
+                    items[i].url +"' >" + items[i].buildingName + "</a></span>" +
                     "</div>";
             }
             html += "</div>"
@@ -444,6 +497,16 @@ function sendMessage(to) {
     }
 }
 
+function deleteBuilding(id) {
+    postQuery("/building/remove?id=" + id, {});
+    goToPage("/");
+}
+
+function deleteComment(id) {
+    postQuery("/comment/delete/" + id, {});
+    goToPage(window.location.href);
+}
+
 var allUsers = [];
 function isAdminRead(name, id) {
     var response = getQuery("/message/isAdminRead?name=" + name);
@@ -452,7 +515,7 @@ function isAdminRead(name, id) {
         element.innerHTML = "<button type=\"button\" class=\"btn btn-primary\"\n" + (response===false ? " style='background:orange' title='Есть непрочитанные сообщения'" : "") +
             "                              onclick=\"getMessages('" + name + "')\"\n" +
             "                              data-toggle=\"modal\" data-target=\"#exampleModal\">\n" +
-            "                        Диалог\n" +
+            "                        " + (localStorage.getItem('lg')==="ru" ? "Диалог" : (localStorage.getItem('lg')==="kz" ? "Диалог" : "Talk")) + "\n" +
             "                      </button>";
         var exist = false;
         for (var i = 0; i < allUsers.length; i++) {
@@ -482,4 +545,192 @@ function updateUsersNotify() {
 function gotoBottom(id){
     var element = document.getElementById(id);
     element.scrollTop = element.scrollHeight - element.clientHeight;
+}
+
+function createdBuilding() {
+    setTimeout(function() {
+        alert("Готово!");
+        document.getElementById("fileUploadForm").reset();
+    }, 1000);
+}
+
+function updatedPersonal() {
+    setTimeout(function() {
+        alert("Данные обновлены!");
+        document.getElementById("fileUploadForm").reset();
+    }, 1000);
+}
+
+/*function createBuilding() {
+    var fileElement = document.getElementById("fileElement");
+    var nameElement = document.getElementById("nameElement");
+    var textElement = document.getElementById("textElement");
+    var reader = new FileReader();
+    reader.onload = function() {
+
+        var arrayBuffer = this.result,
+            array = new Uint8Array(arrayBuffer),
+            arraySec = new Int8Array(arrayBuffer),
+            binaryString = String.fromCharCode.apply(null, array);
+
+        console.log(binaryString);
+        console.log(StringToArrayBuffer(binaryString));
+        var name = nameElement.value;
+        var text = textElement.value;
+        postQuery("/building/withImg", {
+            name: name,
+            text: text,
+            image: binaryString
+        });
+        /!*var response = getQuery("/building/test");
+        console.log(getQuery("/building/test"));
+        console.log(StringToArrayBuffer(response[0]["image"]));
+        var blob = new Blob( [ StringToArrayBuffer(response[0]["image"]) ], { type: "image/jpeg" } );
+        var urlCreator = window.URL || window.webkitURL;
+        var imageUrl = urlCreator.createObjectURL( blob );
+        var img = document.querySelector( "#photo" );
+        img.src = imageUrl;*!/
+
+    };
+    reader.readAsArrayBuffer(fileElement.files[0]);
+}*/
+
+function base64ToArrayBuffer(base64) {
+    var binaryString = window.atob(base64);
+    var binaryLen = binaryString.length;
+    var bytes = new Uint8Array(binaryLen);
+    for (var i = 0; i < binaryLen; i++) {
+        var ascii = binaryString.charCodeAt(i);
+        bytes[i] = ascii;
+    }
+    return bytes;
+}
+
+function ArrayBufferToString(buffer) {
+    return BinaryToString(String.fromCharCode.apply(null, Array.prototype.slice.apply(new Uint8Array(buffer))));
+}
+
+function StringToArrayBuffer(string) {
+    return StringToUint8Array(string).buffer;
+}
+
+function BinaryToString(binary) {
+    var error;
+
+    try {
+        return decodeURIComponent(escape(binary));
+    } catch (_error) {
+        error = _error;
+        if (error instanceof URIError) {
+            return binary;
+        } else {
+            throw error;
+        }
+    }
+}
+
+function StringToBinary(string) {
+    var chars, code, i, isUCS2, len, _i;
+
+    len = string.length;
+    chars = [];
+    isUCS2 = false;
+    for (i = _i = 0; 0 <= len ? _i < len : _i > len; i = 0 <= len ? ++_i : --_i) {
+        code = String.prototype.charCodeAt.call(string, i);
+        if (code > 255) {
+            isUCS2 = true;
+            chars = null;
+            break;
+        } else {
+            chars.push(code);
+        }
+    }
+    if (isUCS2 === true) {
+        return unescape(encodeURIComponent(string));
+    } else {
+        return String.fromCharCode.apply(null, Array.prototype.slice.apply(chars));
+    }
+}
+
+function StringToUint8Array(string) {
+    var binary, binLen, buffer, chars, i, _i;
+    binary = StringToBinary(string);
+    binLen = binary.length;
+    buffer = new ArrayBuffer(binLen);
+    chars  = new Uint8Array(buffer);
+    for (i = _i = 0; 0 <= binLen ? _i < binLen : _i > binLen; i = 0 <= binLen ? ++_i : --_i) {
+        chars[i] = String.prototype.charCodeAt.call(binary, i);
+    }
+    return chars;
+}
+
+function insertAtCaret(areaId, text) {
+    var txtarea = document.getElementById(areaId);
+    if (!txtarea) {
+        return;
+    }
+
+    var scrollPos = txtarea.scrollTop;
+    var strPos = 0;
+    var br = ((txtarea.selectionStart || txtarea.selectionStart == '0') ?
+        "ff" : (document.selection ? "ie" : false));
+    if (br == "ie") {
+        txtarea.focus();
+        var range = document.selection.createRange();
+        range.moveStart('character', -txtarea.value.length);
+        strPos = range.text.length;
+    } else if (br == "ff") {
+        strPos = txtarea.selectionStart;
+    }
+
+    var front = (txtarea.value).substring(0, strPos);
+    var back = (txtarea.value).substring(strPos, txtarea.value.length);
+    txtarea.value = front + text + back;
+    strPos = strPos + text.length;
+    if (br == "ie") {
+        txtarea.focus();
+        var ieRange = document.selection.createRange();
+        ieRange.moveStart('character', -txtarea.value.length);
+        ieRange.moveStart('character', strPos);
+        ieRange.moveEnd('character', 0);
+        ieRange.select();
+    } else if (br == "ff") {
+        txtarea.selectionStart = strPos;
+        txtarea.selectionEnd = strPos;
+        txtarea.focus();
+    }
+
+    txtarea.scrollTop = scrollPos;
+}
+
+function addNewLine() {
+    insertAtCaret("text", " @newLine@ ");
+}
+function addEndLine() {
+    insertAtCaret("text", " @endLine@ ");
+}
+
+function addNewLineKz() {
+    insertAtCaret("kzText", " @newLine@ ");
+}
+function addEndLineKz() {
+    insertAtCaret("kzText", " @endLine@ ");
+}
+
+function addNewLineEn() {
+    insertAtCaret("enText", " @newLine@ ");
+}
+function addEndLineEn() {
+    insertAtCaret("enText", " @endLine@ ");
+}
+
+function addPersonal() {
+    if (window.location.href.indexOf("personal") !== -1) {
+        var item = getQuery("/userPersonal");
+        var firstName = document.getElementById("firstName");
+        var lastName = document.getElementById("lastName");
+        firstName.value = item.firstName || "";
+        lastName.value = item.lastName || "";
+
+    }
 }

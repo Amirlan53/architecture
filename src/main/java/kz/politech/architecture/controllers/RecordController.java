@@ -1,9 +1,11 @@
 package kz.politech.architecture.controllers;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import kz.politech.architecture.dao.BuildingRepository;
 import kz.politech.architecture.dao.RecordRepository;
 import kz.politech.architecture.model.Record;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Sort;
 import org.springframework.http.HttpStatus;
@@ -22,6 +24,9 @@ public class RecordController {
     @Autowired
     private RecordRepository recordRepository;
 
+    @Autowired
+    private BuildingRepository buildingRepository;
+
     @RequestMapping(method = RequestMethod.GET)
     @ResponseBody
     public ResponseEntity<Map<String, Object>> get(@RequestParam("url") String url) {
@@ -37,7 +42,23 @@ public class RecordController {
     public ResponseEntity<Map<String, Object>> getAll() {
 
         Map<String, Object> response = new HashMap<>();
-        response.put("response", recordRepository.findAll(PageRequest.of(0, 5, Sort.by("likes").descending())));
+        Page<Record> records = recordRepository.findAll(PageRequest.of(0, 5, Sort.by("likes").descending()));
+        List<Map<String, Object>> list = new ArrayList<>();
+        for (Record record : records) {
+            Map<String, Object> obj = new HashMap<>();
+            obj.put("url", record.getUrl());
+            obj.put("id", record.getId());
+            obj.put("likes", record.getLikes());
+            obj.put("whoLiked", record.getWhoLiked());
+            String buildingId = record.getUrl().substring(record.getUrl().lastIndexOf("/") + 1);
+
+            if (buildingId != null && buildingRepository.getOne(Long.valueOf(buildingId)) != null &&
+                    buildingRepository.existsById(Long.valueOf(buildingId))) {
+                obj.put("buildingName", buildingRepository.getOne(Long.valueOf(buildingId)).getName());
+                list.add(obj);
+            }
+        }
+        response.put("response", list);
         return new ResponseEntity<>(response, HttpStatus.OK);
 
     }

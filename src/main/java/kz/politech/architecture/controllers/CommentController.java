@@ -4,6 +4,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import kz.politech.architecture.dao.CommentRepository;
 import kz.politech.architecture.dao.UserRepository;
 import kz.politech.architecture.model.Comment;
+import kz.politech.architecture.model.Role;
 import kz.politech.architecture.model.User;
 import kz.politech.architecture.security.MyUserDetailsService;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -11,6 +12,8 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.mail.SimpleMailMessage;
 import org.springframework.mail.javamail.JavaMailSender;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.web.bind.annotation.*;
 
@@ -44,12 +47,14 @@ public class CommentController {
             User user = userRepository.findByUsername(author);
             result.put("firstName", user.getFirstName());
             result.put("lastName", user.getLastName());
+            result.put("author", comment.getAuthor());
             result.put("text", comment.getText());
             result.put("url", comment.getUrl());
             result.put("date", comment.getDate());
+            result.put("id", comment.getId());
             res.add(result);
         }
-        response.put("response", commentRepository.getAllByUrl(url));
+        response.put("response", res);
         return new ResponseEntity<>(response, HttpStatus.OK);
 
     }
@@ -68,9 +73,11 @@ public class CommentController {
             User user = userRepository.findByUsername(author);
             result.put("firstName", user.getFirstName());
             result.put("lastName", user.getLastName());
+            result.put("name", user.getUsername());
             result.put("text", comment.getText());
             result.put("url", comment.getUrl());
             result.put("date", comment.getDate());
+            result.put("id", comment.getId());
             res.add(result);
         }
         response.put("response", res);
@@ -95,6 +102,30 @@ public class CommentController {
         ObjectMapper objectMapper = new ObjectMapper();
         Comment commentModel =  objectMapper.convertValue(comment, Comment.class);
         commentRepository.save(commentModel);
+        Map<String, Object> response = new HashMap<>();
+        response.put("response", "done");
+        return new ResponseEntity<>(response, HttpStatus.OK);
+
+    }
+
+    @RequestMapping(value = "/delete/{id}", method = RequestMethod.POST)
+    @ResponseBody
+    public ResponseEntity<Map<String, Object>> delete(@PathVariable("id") String id) {
+
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        Object principal = authentication.getPrincipal();
+        Collection<Role> roles = new ArrayList<>();
+        if (principal instanceof UserDetails) {
+            roles = (Collection<Role>) ((UserDetails) principal).getAuthorities();
+        }
+        Set<String> roles_str = new HashSet<>();
+        for (Role role : roles) {
+            roles_str.add(role.getName());
+        }
+        if (roles_str.contains("ROLE_ADMIN")) {
+            Comment comment = commentRepository.getOne(Long.valueOf(id));
+            commentRepository.delete(comment);
+        }
         Map<String, Object> response = new HashMap<>();
         response.put("response", "done");
         return new ResponseEntity<>(response, HttpStatus.OK);
