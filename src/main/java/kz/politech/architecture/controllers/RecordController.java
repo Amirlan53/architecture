@@ -55,6 +55,8 @@ public class RecordController {
             if (buildingId != null && buildingRepository.getOne(Long.valueOf(buildingId)) != null &&
                     buildingRepository.existsById(Long.valueOf(buildingId))) {
                 obj.put("buildingName", buildingRepository.getOne(Long.valueOf(buildingId)).getName());
+                obj.put("buildingNameEn", buildingRepository.getOne(Long.valueOf(buildingId)).getEnName());
+                obj.put("buildingNameKz", buildingRepository.getOne(Long.valueOf(buildingId)).getKzName());
                 list.add(obj);
             }
         }

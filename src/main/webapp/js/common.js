@@ -371,7 +371,7 @@ function loadTopBuildings() {
                     "</span>" +
                     "<span style='display: table-cell;vertical-align: top;padding-left: 5px;'>" +
                     "   <a href='" +
-                    items[i].url +"' >" + items[i].buildingName + "</a></span>" +
+                    items[i].url +"' >" + (localStorage.getItem('lg')==="ru" ? items[i].buildingName : (localStorage.getItem('lg')==="kz" ? items[i].buildingNameKz : items[i].buildingNameEn)) + "</a></span>" +
                     "</div>";
             }
             html += "</div>"
