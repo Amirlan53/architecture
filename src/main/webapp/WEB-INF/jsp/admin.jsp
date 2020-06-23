@@ -339,7 +339,7 @@
                   <button type="button" onclick="addEndLineKz()" class="btn btn-secondary"><%= end() %></button>
                 </div>
                 <br>
-                <textarea class="form-control" id="kzText" name="text" rows="3"
+                <textarea class="form-control" id="kzText" name="kzText" rows="3"
                           aria-describedby="textHelp" placeholder="<%= buildDescPlace() %>"></textarea>
                 <small id="kzTextHelp" class="form-text text-muted"><%= buildDescHelp() %></small>
               </div>
@@ -350,7 +350,7 @@
                   <button type="button" onclick="addEndLineEn()" class="btn btn-secondary"><%= end() %></button>
                 </div>
                 <br>
-                <textarea class="form-control" id="enText" name="text" rows="3"
+                <textarea class="form-control" id="enText" name="enText" rows="3"
                           aria-describedby="textHelp" placeholder="<%= buildDescPlace() %>"></textarea>
                 <small id="enTextHelp" class="form-text text-muted"><%= buildDescHelp() %></small>
               </div>
