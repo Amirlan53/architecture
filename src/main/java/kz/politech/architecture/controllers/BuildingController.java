@@ -94,7 +94,7 @@ public class BuildingController {
                     "    </div>\n";
 
             if (roles_str.contains("ROLE_ADMIN")) {
-                html += "  <div class=\"row\">" +
+                html += "  <div class=\"row\" style=\"margin-top:300px;\">" +
                         "       <div class=\"col-2\"></div>" +
                         "       <div class=\"col-8\">" +
                         "   <div class=\"card\">   <div class=\"card-body\">     <h4>" + changeParagraph() + "</h4>" +

@@ -345,7 +345,7 @@ function loadTopBuildings() {
             html += "<div class=\"col-12 col-md-6 col-lg-4\" onclick=\"goToPage('/building/" + arr[i].id + "')\">\n" +
                 "                            <figure>\n" +
                 "                                <p><img src=\"/building/" + arr[i].id + "/img\" alt=\"" + arr[i].name + "\" /></p>\n" +
-                "                                <figcaption>" + arr[i].name + "</figcaption>\n" +
+                "                                <figcaption>" + (localStorage.getItem('lg')==="ru" ? arr[i].name : (localStorage.getItem('lg')==="kz" ? arr[i].kzName : arr[i].enName)) + "</figcaption>\n" +
                 "                            </figure>\n" +
                 "                        </div>";
         }
